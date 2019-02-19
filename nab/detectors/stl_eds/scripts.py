@@ -39,12 +39,13 @@ if __name__ == '__main__':
         data = pd.read_csv(os.path.join(subdir, file))
         values = data['value']
         period = inferPeriod(values)
-        if period == 0:
-            anomalies_idx = []
+        if period <= 2 or period > values.shape[0]/2:
+            season = np.zeros_like(values)
+            trend = np.median(values)
         else:
-            r, season, trend, w = stl(y=values, np=period)
-            rest = values - season - trend# np.median(values)
-            anomalies_idx = h_esd(rest, k=0.002)
+            _, season, trend, _ = stl(y=values, np=period)
+        rest = values - season - np.median(values)
+        anomalies_idx = h_esd(rest, k=0.0028)
         data['anomaly_score'] = np.zeros_like(data['value'])
         data.loc[anomalies_idx, ['anomaly_score']] = 1.0
         d = subdir.split('/')[-1]

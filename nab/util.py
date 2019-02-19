@@ -122,16 +122,7 @@ def updateThresholds(newThresholds, thresholdsFilePath):
 def checkInputs(args):
   """Function that displays a set of arguments and asks to proceed."""
   pprint.pprint(vars(args))
-  inp = raw_input("Proceed? (y/n): ")
-
-  if inp == 'y':
-    return True
-
-  if inp == 'n':
-    return False
-
-  print "Incorrect input given\n"
-  return checkInputs(args)
+  return True
 
 
 def convertAnomalyScoresToDetections(anomalyScores, threshold):
