@@ -43,9 +43,9 @@ if __name__ == '__main__':
             season = np.zeros_like(values)
             trend = np.median(values)
         else:
-            _, season, trend, _ = stl(y=values, np=period)
+            _, season, trend, _ = stl(y=values, np=period, robust=False)
         rest = values - season - np.median(values)
-        anomalies_idx = h_esd(rest, k=0.0028)
+        anomalies_idx = h_esd(rest, k=0.002)
         data['anomaly_score'] = np.zeros_like(data['value'])
         data.loc[anomalies_idx, ['anomaly_score']] = 1.0
         d = subdir.split('/')[-1]
