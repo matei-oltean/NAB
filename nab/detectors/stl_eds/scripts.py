@@ -4,11 +4,11 @@ from sys import path
 import numpy as np
 
 
-path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/Time Series Anomaly Detection/stl'))
-#  path.append(os.path.abspath('/home/matei/Documents/timeseries/stl'))
+#  path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/Time Series Anomaly Detection/stl'))
+path.append(os.path.abspath('/home/matei/Documents/timeseries/stl'))
 
 
-from stlLib import stl, inferPeriod, h_esd
+from stlLib import stl, inferPeriod, h_esd, threshold
 
 
 def get_files(path):
@@ -42,15 +42,16 @@ if __name__ == '__main__':
         if period <= 2 or period > values.shape[0]/2:
             season = np.zeros_like(values)
             trend = np.median(values)
+            period = 1
         else:
-            _, season, trend, _ = stl(y=values, np=period, robust=False)
+            _, season, trend, _ = stl(y=values, p=period, robust=False)
         rest = values - season - np.median(values)
-        anomalies_idx = h_esd(rest, k=0.002)
+        anomalies_idx = h_esd(rest, k=0.0028)
+        if anomalies_idx:
+            anomalies_idx = threshold(data=values, indices=anomalies_idx, threshold=0.75, period=period, both=True)
         data['anomaly_score'] = np.zeros_like(data['value'])
         data.loc[anomalies_idx, ['anomaly_score']] = 1.0
         d = subdir.split('/')[-1]
         labels = pd.read_csv(os.path.join(os.path.join(null_path, d), 'null_' + file))['label']
         data['label'] = labels
-        if labels.shape[0] != data.shape[0]:
-            print('toto')
         data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
