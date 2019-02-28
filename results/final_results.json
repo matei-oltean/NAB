@@ -60,9 +60,9 @@
         "standard": 35.687043255862065
     },
     "stlheds": {
-        "reward_low_FN_rate": 53.49260057140805,
-        "reward_low_FP_rate": 29.843555348534483,
-        "standard": 46.18717671917241
+        "reward_low_FN_rate": 52.09612306543104,
+        "reward_low_FP_rate": 35.91896171318966,
+        "standard": 46.6786673567543
     },
     "twitterADVec": {
         "reward_low_FN_rate": 53.50107495100574,

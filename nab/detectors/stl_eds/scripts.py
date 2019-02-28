@@ -39,7 +39,7 @@ if __name__ == '__main__':
         data = pd.read_csv(os.path.join(subdir, file))
         values = data['value']
         period = inferPeriod(values)
-        if period <= 2 or period > values.shape[0]/2:
+        if period < 2 or period >= values.shape[0]/2:
             season = np.zeros_like(values)
             trend = np.median(values)
             period = 1
