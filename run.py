@@ -74,15 +74,15 @@ def main(args):
   if args.score:
     with open(args.thresholdsFile) as thresholdConfigFile:
       detectorThresholds = json.load(thresholdConfigFile)
-    runner.score(args.detectors, detectorThresholds)
+      runner.score(args.detectors, detectorThresholds)
 
   if args.normalize:
     try:
-      runner.normalize()
+      toto = runner.normalize()
     except AttributeError("Error: you must run the scoring step with the "
                           "normalization step."):
       return
-
+  return toto
 
 if __name__ == "__main__":
 

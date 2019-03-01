@@ -186,7 +186,6 @@ class Runner(object):
     print("\nRunning scoring step")
 
     scoreFlag = True
-    baselines = {}
 
     self.resultsFiles = []
     for detectorName in detectorNames:
@@ -277,8 +276,10 @@ class Runner(object):
 
       print(("Final score for \'%s\' detector on \'%s\' profile = %.2f"
              % (detector, profile, score)))
-
+      if profile == 'standard':
+        toto = score
     resultsPath = os.path.join(self.resultsDir, "final_results.json")
     updateFinalResults(finalResults, resultsPath)
     print("Final scores have been written to %s." % resultsPath)
+    return toto
 
