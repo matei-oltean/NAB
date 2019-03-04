@@ -3,6 +3,7 @@ import os
 from sys import path
 import numpy as np
 import argparse
+from three_sigma import Three_Sigma
 
 path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/NAB'))
 
@@ -16,22 +17,6 @@ def get_files(path):
             if file.endswith('.csv'):
                 result.append([subdir, file])
     return result
-
-
-"""
-def load_json(path):
-    json_data = open(path)
-    return json.load(json_data)
-"""
-
-
-def frange(x, y, jump):
-    """
-    Range for floats
-    """
-    while x < y:
-        yield x
-        x += jump
 
 
 if __name__ == '__main__':
@@ -56,12 +41,12 @@ if __name__ == '__main__':
 
     parser.add_argument("--score",
                     help="Analyze results in the results directory",
-                    default=False,
+                    default=True,
                     action="store_true")
 
     parser.add_argument("--normalize",
                     help="Normalize the final scores",
-                    default=False,
+                    default=True,
                     action="store_true")
 
     parser.add_argument("--skipConfirmation",
@@ -109,40 +94,37 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    for both in [True, False]:
-        for robust in [True, False]:
-            for percentile in [95, 90, 85, 80, 75]:
-                for thresh in ['all', 'rest']:
-                    for median in [True, False]:
-                        for k in list(frange(0.001, 0.003, 0.0005)):
-                            for tup in get_files(data_path):
-                                subdir, file = tup
-                                d = subdir.split('/')[-1]
-                                print(file)
-                                data = pd.read_csv(os.path.join(subdir, file))
-                                values = data['value']
-                                period = infer_period(values)
-                                if period < 2 or period >= values.shape[0]/2:
-                                    season = np.zeros_like(values)
-                                    trend = np.median(values)
-                                    period = 1
-                                else:
-                                    _, season, trend, _ = stl(y=values, p=period, robust=robust)
-                                if median:
-                                    trend = np.median(values)
-                                rest = values - season - trend
-                                anomalies_idx = h_esd(rest, k)
-                                if anomalies_idx:
-                                    val = values
-                                    if thresh == 'rest':
-                                        val = rest
-                                    anomalies_idx = threshold(data=val, indices=anomalies_idx, threshold=percentile, period=period, both=both)
-                                data['anomaly_score'] = np.zeros_like(data['value'])
-                                data.loc[anomalies_idx, ['anomaly_score']] = 1.0
-                                d = subdir.split('/')[-1]
-                                labels = pd.read_csv(os.path.join(os.path.join(null_path, d), 'null_' + file))['label']
-                                data['label'] = labels
-                                data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
-                            score = run.main(args)
-                            # TODO str(x)
-                            print(both + ',' + robust + ',' + percentile + ',' + ',' + ',' + thresh + ',' + median + ',' + k + ',' + score)
+    for mode in ['mean', 'median']:
+        for window in range(20, 51, 10):
+            detector = Three_Sigma(window, mode)
+            for tup in get_files(data_path):
+                subdir, file = tup
+                d = subdir.split('/')[-1]
+                print(file)
+                data = pd.read_csv(os.path.join(subdir, file))
+                values = data['value']
+                period = infer_period(values)
+                if period < 2 or period >= values.shape[0]/2:
+                    season = np.zeros_like(values)
+                    trend = np.median(values)
+                    period = 1
+                else:
+                    _, season, trend, _ = stl(y=values, p=period, robust=robust)
+                if median:
+                    trend = np.median(values)
+                rest = values - season - trend
+                anomalies_idx = h_esd(rest, k)
+                if anomalies_idx:
+                    val = values
+                    if thresh == 'rest':
+                        val = rest
+                    anomalies_idx = threshold(data=val, indices=anomalies_idx, threshold=percentile, period=period, both=both)
+                data['anomaly_score'] = np.zeros_like(data['value'])
+                data.loc[anomalies_idx, ['anomaly_score']] = 1.0
+                d = subdir.split('/')[-1]
+                labels = pd.read_csv(os.path.join(os.path.join(null_path, d), 'null_' + file))['label']
+                data['label'] = labels
+                data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
+            score = run.main(args)
+            # TODO str(x)
+            print(both + ',' + robust + ',' + percentile + ',' + ',' + ',' + thresh + ',' + median + ',' + k + ',' + score)

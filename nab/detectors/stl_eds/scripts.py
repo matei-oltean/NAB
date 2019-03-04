@@ -58,12 +58,12 @@ if __name__ == '__main__':
 
     parser.add_argument("--score",
                     help="Analyze results in the results directory",
-                    default=False,
+                    default=True,
                     action="store_true")
 
     parser.add_argument("--normalize",
                     help="Normalize the final scores",
-                    default=False,
+                    default=True,
                     action="store_true")
 
     parser.add_argument("--skipConfirmation",
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                             for tup in get_files(data_path):
                                 subdir, file = tup
                                 d = subdir.split('/')[-1]
-                                print(file)
+                                # print(file)
                                 data = pd.read_csv(os.path.join(subdir, file))
                                 values = data['value']
                                 period = infer_period(values)
@@ -146,5 +146,5 @@ if __name__ == '__main__':
                                 data['label'] = labels
                                 data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
                             score = run.main(args)
-                            # TODO str(x)
-                            print(both + ',' + robust + ',' + percentile + ',' + ',' + ',' + thresh + ',' + median + ',' + k + ',' + score)
+                            result = str.format('{},{},{},{},{},{},{}', both, robust, percentile, thresh, median, k, score)
+                            print(result)

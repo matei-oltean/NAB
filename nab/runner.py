@@ -183,7 +183,7 @@ class Runner(object):
                                     another dictionary containing the score and
                                     the threshold used to obtained that score.
     """
-    print("\nRunning scoring step")
+    # print("\nRunning scoring step")
 
     scoreFlag = True
 
@@ -210,8 +210,8 @@ class Runner(object):
           (detectorName, profileName))
 
         resultsDF.to_csv(scorePath, index=False)
-        print("%s detector benchmark scores written to %s" %\
-          (detectorName, scorePath))
+        # print("%s detector benchmark scores written to %s" %\
+        #  (detectorName, scorePath))
         self.resultsFiles.append(scorePath)
 
 
@@ -230,7 +230,7 @@ class Runner(object):
 
     Note the results CSVs still contain the original scores, not normalized.
     """
-    print("\nRunning score normalization step")
+    # print("\nRunning score normalization step")
 
     # Get baseline scores for each application profile.
     nullDir = os.path.join(self.resultsDir, "null")
@@ -274,12 +274,12 @@ class Runner(object):
           finalResults[detector] = {}
         finalResults[detector][profile] = score
 
-      print(("Final score for \'%s\' detector on \'%s\' profile = %.2f"
-             % (detector, profile, score)))
+      #print(("Final score for \'%s\' detector on \'%s\' profile = %.2f"
+      #       % (detector, profile, score)))
       if profile == 'standard':
         toto = score
     resultsPath = os.path.join(self.resultsDir, "final_results.json")
     updateFinalResults(finalResults, resultsPath)
-    print("Final scores have been written to %s." % resultsPath)
+    # print("Final scores have been written to %s." % resultsPath)
     return toto
 

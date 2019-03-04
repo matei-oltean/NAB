@@ -50,7 +50,7 @@ class Three_Sigma:
         """
         running_mean = np.mean(self.data)
         running_std = np.std(self.data)
-        if self.data[self.index] - running_mean > 3*running_std:
+        if abs(self.data[self.index] - running_mean) > 3*running_std:
             return True
         return False
 
@@ -61,6 +61,15 @@ class Three_Sigma:
         running_median = np.median(self.data)
         mad = np.median(np.abs(self.data - running_median))
         sigma = 1.4826*mad
-        if self.data[self.index] - running_median > 3*sigma:
+        if abs(self.data[self.index] - running_median) > 3*sigma:
             return True
         return False
+
+def detect_anomalies_mean(data, window):
+    rolling_data = data.rolling(window)
+    rolling_mean = rolling_data.sum()
+    rolling_std = rolling_data.std()
+    return (abs(data - rolling_mean) > 3*rolling_std).applymap(int)
+
+def detect_anomalies_median(data, window):
+    
