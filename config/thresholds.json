@@ -1,4 +1,14 @@
 {
+    "3sigma": {
+    "reward_low_FN_rate": {
+        "threshold": 0.5
+    },
+    "reward_low_FP_rate": {
+        "threshold": 0.5
+    },
+    "standard": {
+        "threshold": 0.5
+    }},
     "bayesChangePt": {
         "reward_low_FN_rate": {
             "score": -119.7471580442638,

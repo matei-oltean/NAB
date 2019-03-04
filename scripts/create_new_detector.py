@@ -23,6 +23,9 @@
 
 import argparse
 import os
+from sys import path
+
+path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/NAB'))
 
 from nab.util import getOldDict, recur, writeJSON
 
