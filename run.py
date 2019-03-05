@@ -165,7 +165,7 @@ if __name__ == "__main__":
     args.normalize = True
 
   if len(args.detectors) == 1:
-    # Handle comma-seperated list argument.
+    # Handle comma-separated list argument.
     args.detectors = args.detectors[0].split(",")
 
   # The following imports are necessary for getDetectorClassConstructors to

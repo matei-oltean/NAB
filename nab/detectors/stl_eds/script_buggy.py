@@ -3,10 +3,13 @@ import os
 from sys import path
 import numpy as np
 import argparse
+from itertools import product as cartesian_product
 
-path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/Time Series Anomaly Detection/stl'))
-# path.append(os.path.abspath('/home/matei/Documents/timeseries/stl'))
-path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/NAB'))
+# path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/Time Series Anomaly Detection/stl'))
+path.append(os.path.abspath('/home/matei/Documents/timeseries/stl'))
+# path.append(os.path.abspath('/mnt/c/Users/maoltea/Documents/NAB'))
+path.append(os.path.abspath('/home/matei/Documents/NAB'))
+
 
 from stlLib import stl, infer_period, h_esd, threshold
 import run
@@ -111,23 +114,38 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    for tup in get_files(data_path):
-        subdir, file = tup
-        d = subdir.split('/')[-1]
-        data = pd.read_csv(os.path.join(subdir, file))
-        values = data['value']
-        period = infer_period(values)
-        if period < 2 or period >= values.shape[0]/2:
-            season = np.zeros_like(values)
-            period = 1
-        else:
-            _, season, _, _ = stl(y=values, p=period, robust=False)
-        rest = values - season - np.median(values)
-        anomalies_idx = h_esd(rest, k=0.002)
-        data['anomaly_score'] = np.zeros_like(data['value'])
-        data.loc[anomalies_idx, ['anomaly_score']] = 1.0
-        d = subdir.split('/')[-1]
-        labels = pd.read_csv(os.path.join(os.path.join(null_path, d), 'null_' + file))['label']
-        data['label'] = labels
-        data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
-    run.main(args)
+    space = cartesian_product([False], [False], list(frange(0.0015, 0.003, 0.0003)), range(10, 200, 50))
+
+    for robust, median, k, thresh in space:
+        for tup in get_files(data_path):
+            subdir, file = tup
+            d = subdir.split('/')[-1]
+            # print(file)
+            data = pd.read_csv(os.path.join(subdir, file))
+            values = data['value']
+            period = infer_period(values, thresh)
+            if period <= 2 or period >= values.shape[0]/2:
+                season = np.zeros_like(values)
+                trend = np.median(values)
+            else:
+                _, season, trend, _ = stl(y=values, p=period, robust=robust)
+            if median:
+                trend = np.median(values)
+            rest = values - season - trend
+            anomalies_idx = h_esd(rest, k=k)
+            """
+            if anomalies_idx:
+                val = values
+                if thresh == 'rest':
+                    val = rest
+                anomalies_idx = threshold(data=val, indices=anomalies_idx, threshold=percentile, period=period, both=both)
+            """
+            data['anomaly_score'] = np.zeros_like(data['value'])
+            data.loc[anomalies_idx, ['anomaly_score']] = 1.0
+            d = subdir.split('/')[-1]
+            labels = pd.read_csv(os.path.join(os.path.join(null_path, d), 'null_' + file))['label']
+            data['label'] = labels
+            data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
+        score = run.main(args)
+        result = str.format('{},{},{},{},{}', robust, median, k, thresh, score)
+        print(result)

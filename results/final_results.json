@@ -1,4 +1,9 @@
 {
+    "3sigma": {
+        "reward_low_FN_rate": -1038.9098386475055,
+        "reward_low_FP_rate": -3302.346052842634,
+        "standard": -1605.3475165919479
+    },
     "contextOSE": {
         "reward_low_FN_rate": 73.18167250416667,
         "reward_low_FP_rate": 66.97713919047413,
@@ -60,9 +65,9 @@
         "standard": 35.687043255862065
     },
     "stlheds": {
-        "reward_low_FN_rate": 23.32344147598757,
-        "reward_low_FP_rate": -26.27103590389349,
-        "standard": 9.985162213981344
+        "reward_low_FN_rate": 46.7176024366627,
+        "reward_low_FP_rate": 17.96592727129769,
+        "standard": 38.17985193085611
     },
     "twitterADVec": {
         "reward_low_FN_rate": 53.50107495100574,

@@ -281,5 +281,6 @@ class Runner(object):
     resultsPath = os.path.join(self.resultsDir, "final_results.json")
     updateFinalResults(finalResults, resultsPath)
     # print("Final scores have been written to %s." % resultsPath)
+    self.pool.close()
     return toto
 

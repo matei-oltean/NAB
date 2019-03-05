@@ -1,75 +1,36 @@
 import numpy as np
+import pandas as pd
 
 
-class Three_Sigma:
-    def __init__(self, window, mode='median'):
-        """
-        Initalises a 3-sigma detector
-        Parameters
-        ----------
-        window: int
-            Window size of the detector.
-        
-        mode: string
-            'median' for using a median and mad, 'mean' for using a mean and variance.
-        """
-        self.data = np.zeros(window)
-        self.window = window
-        self.index = 0
-        self.full = False # True if at least window observations have been seen
-        self.mode = mode
-    
-    def detect(self, data):
-        """
-        Adds an observation to the accumulator
-        Parameters
-        ----------
-        data: float
-            New observation at time t.
+def mad(data):
+    median = np.nanmedian(data)
+    return 1.4826*np.nanmedian(np.abs(data - median))
 
-        Returns
-        -------
-            True if the new data is anomalous, False if not (or if still not enough observations have been seen).
-        """
-        self.data[self.index] = data
-        if self.index == self.window - 1:
-            self.full = True
-        if self.full:
-            if self.mode == 'mean':
-                res = self.anomalyMean()
-            else:
-                res = self.anomalyMedian()
-        else:
-            res = False
-        self.index = (self.index + 1) % self.window
-        return res
 
-    def anomalyMean(self):
-        """
-        Returns true if the last added data was anomalous, using a mean.
-        """
-        running_mean = np.mean(self.data)
-        running_std = np.std(self.data)
-        if abs(self.data[self.index] - running_mean) > 3*running_std:
-            return True
-        return False
+def online_var(data, limit=100):
+    M2 = 0
+    mean = 0
+    result = []
+    for i, x in enumerate(data[:max(limit, len(data))]):
+        delta = x - mean
+        mean += delta / (i + 1)
+        delta2 = x - mean
+        M2 += delta*delta2
+        result.append(M2/(i+1))
+    return result
 
-    def anomalyMedian(self):
-        """
-        Returns true if the last added data was anomalous, using a median.
-        """
-        running_median = np.median(self.data)
-        mad = np.median(np.abs(self.data - running_median))
-        sigma = 1.4826*mad
-        if abs(self.data[self.index] - running_median) > 3*sigma:
-            return True
-        return False
 
-def detect_anomalies_mean(data, window):
+def online_std(data, limit=100):
+    var = online_var(data, limit)
+    std = np.sqrt(var)
+    result = np.full_like(data, std[-1])
+    result[0: len(var)] = std
+    return result
+
+
+def detect_anomalies(data: pd.Series, window: int, mode='mean', std='std', limit=100):
     rolling_data = data.rolling(window)
-    rolling_mean = rolling_data.sum()
-    rolling_std = rolling_data.std()
-    return (abs(data - rolling_mean) > 3*rolling_std).applymap(int)
-
-def detect_anomalies_median(data, window):
-    
+    estimator = rolling_data.mean() if mode == 'mean' else rolling_data.median()
+    noise = data - estimator
+    std = np.std(noise[window:]) if std == 'std' else mad(noise) # online_std(noise, limit)
+    return (np.abs(noise) > 3*std).astype(int)
