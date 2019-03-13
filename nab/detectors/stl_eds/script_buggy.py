@@ -113,33 +113,42 @@ if __name__ == '__main__':
                     "benchmark. If not specified all CPUs will be used.")
 
     args = parser.parse_args()
+    
+    split = 15
 
-    space = cartesian_product([False], [False], list(frange(0.0015, 0.003, 0.0003)), range(10, 200, 50))
+    space = cartesian_product([False], [0.002])
 
-    for robust, median, k, thresh in space:
+    for robust, k in space:
         for tup in get_files(data_path):
             subdir, file = tup
             d = subdir.split('/')[-1]
             # print(file)
             data = pd.read_csv(os.path.join(subdir, file))
             values = data['value']
-            period = infer_period(values, thresh)
-            if period <= 2 or period >= values.shape[0]/2:
+            n = values.shape[0]
+            period = infer_period(values, 15)
+            step = period*split#max(period*split, 800)
+            anomalies_idx = []
+            if period <= 2 or period >= n/2:
                 season = np.zeros_like(values)
                 trend = np.median(values)
+                anomalies_idx = h_esd(values - trend, k=k)
             else:
-                _, season, trend, _ = stl(y=values, p=period, robust=robust)
-            if median:
-                trend = np.median(values)
-            rest = values - season - trend
-            anomalies_idx = h_esd(rest, k=k)
-            """
-            if anomalies_idx:
-                val = values
-                if thresh == 'rest':
-                    val = rest
-                anomalies_idx = threshold(data=val, indices=anomalies_idx, threshold=percentile, period=period, both=both)
-            """
+                if n > 2*step:
+                    periods = [values[i:min(i + step, n)] for i in range(0, n, step)]
+                    if len(periods[-1]) < step:
+                        periods[-2] = np.concatenate((periods[-2], periods[-1]), axis=None)
+                        periods = periods[:-1]
+                    for i, tab in enumerate(periods):
+                        _, season, _, _ = stl(y=tab, p=period, robust=robust, ns=7)
+                        rest = tab - season - np.median(tab)
+                        anomalies = np.array(h_esd(rest, k=k))
+                        if len(anomalies):
+                            anomalies_idx = np.concatenate((anomalies_idx, anomalies + i*step), axis=None)
+                else:
+                    _, season, _, _ = stl(y=values, p=period, robust=robust)
+                    rest = values - season - np.median(values)
+                    anomalies_idx = h_esd(rest, k=k)
             data['anomaly_score'] = np.zeros_like(data['value'])
             data.loc[anomalies_idx, ['anomaly_score']] = 1.0
             d = subdir.split('/')[-1]
@@ -147,5 +156,5 @@ if __name__ == '__main__':
             data['label'] = labels
             data.to_csv(os.path.join(os.path.join(res_path, d), 'stlheds_' + file), index=False)
         score = run.main(args)
-        result = str.format('{},{},{},{},{}', robust, median, k, thresh, score)
+        result = str.format('{},{},{}', robust, k, score)
         print(result)
